@@ -20,10 +20,9 @@
   },
   "homepage": "https://github.com/wudududu/BBlog#readme",
   "dependencies": {
-    "body-parser": "^1.18.3",
     "crypto": "^1.0.1",
     "koa": "^2.6.2",
-    "koa-bodyparser": "^4.2.1",
+    "koa-body": "^4.0.6",
     "koa-router": "^7.4.0",
     "mongoose": "^5.4.0"
   }
