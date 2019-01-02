@@ -13,7 +13,7 @@ function dealMD(path) {
     arr.push(line)
   })
   objReadLine.on('close', () => {
-    console.log(arr)
+    // console.log(arr)
     let skeleton = []
     arr.forEach(i => {
       if (re.exec(i)) skeleton.push(i)

@@ -3,11 +3,13 @@ const router = require('koa-router')()
 const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
+const cors = require('koa2-cors')
 // var bodyParser = require('koa-bodyparser')
 let body = require('koa-body')
 
 const dealMD = require('./dealMD').dealMD // 处理md文件
 const user = require('./connectDB.js').user
+const article = require('./connectDB.js').article
 
 
 const app = new koa()
@@ -15,6 +17,14 @@ const app = new koa()
 // app.use(bodyParser({
 //   enableTypes: ['json', 'form', 'form-data']
 // }))
+app.use(cors({
+  origin: '*',
+  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+  maxAge: 5,
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'DELETE'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+}));
 app.use(body({
   multipart: true,
   formidable: {
@@ -59,7 +69,19 @@ router.post('/pushArticle', async (ctx, next) => {
 })
 // 请求文章列表
 router.get('/getArticleList', async (ctx, next) => {
-  
+  console.log(ctx.request.query)
+  await article.find({}, 'skeleton title time', { skip: (ctx.request.query.page - 1) * ctx.request.query.limit, maxscan: +ctx.request.query.limit }, function (err, data) {
+    if (err) throw err
+    ctx.response.body = data
+  })
+})
+// 请求文章detail
+router.get('/getArticle/:id', async (ctx, next) => {
+  console.log(ctx.params.id)
+  await article.find({_id: ctx.params.id}, function (err, data) {
+    if (err) throw err
+    ctx.response.body = data[0]
+  })
 })
 // 添加路由中间件
 app.use(router.routes())
