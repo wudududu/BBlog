@@ -31,7 +31,10 @@ app.use(body({
       maxFileSize: 200*1024*1024    // 设置上传文件大小最大限制，默认2M
   }
 }))
-
+app.use(function *(next) {
+  yield *next
+  if (this.response.status === 404) console.log('404')
+})
 router.post('/', async (ctx, next) => {
   
 })
@@ -49,14 +52,14 @@ router.post('/register', async (ctx, next) => {
 // 登录
 router.post('/login', async (ctx, next) => {
   let password = crypto.createHash('md5').update(ctx.request.body.password).digest('hex')
-  await user.find({'nickname': ctx.request.body.nickname, 'password': password}, function (err, data) {
-    if (err) throw err
-    if (!data.toString()) {
-      ctx.response.body = '用户名或密码错误'
-    } else {
-      ctx.response.body = '登录成功'
-    }
+  let data = await user.find({'nickname': ctx.request.body.nickname, 'password': password}, function (err, data) {
+    if (err) ctx.response.body = err
   })
+  if (!data.toString()) {
+    ctx.response.body = '用户名或密码错误'
+  } else {
+    ctx.response.body = '登录成功'
+  }
 })
 // 发布文章
 router.post('/pushArticle', async (ctx, next) => {
@@ -70,18 +73,19 @@ router.post('/pushArticle', async (ctx, next) => {
 // 请求文章列表
 router.get('/getArticleList', async (ctx, next) => {
   console.log(ctx.request.query)
-  await article.find({}, 'skeleton title time', { skip: (ctx.request.query.page - 1) * ctx.request.query.limit, maxscan: +ctx.request.query.limit }, function (err, data) {
-    if (err) throw err
-    ctx.response.body = data
+  let data = await article.find({}, 'skeleton title time', { skip: (ctx.request.query.page - 1) * ctx.request.query.limit, maxscan: +ctx.request.query.limit }, function (err, data) {
+    if (err) ctx.response.body = err
   })
+  ctx.response.body = data
 })
 // 请求文章detail
 router.get('/getArticle/:id', async (ctx, next) => {
   console.log(ctx.params.id)
-  await article.find({_id: ctx.params.id}, function (err, data) {
-    if (err) throw err
-    ctx.response.body = data[0]
+  let data = await article.find({_id: ctx.params.id}, function (err, data) {
+    if (err) ctx.response.body = err
   })
+  ctx.response.status = 200
+  ctx.response.body = data[0]
 })
 // 添加路由中间件
 app.use(router.routes())
